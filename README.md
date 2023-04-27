@@ -1,5 +1,5 @@
 # SpringSlider-RSF
-
+\n
 Im_SpringSlider_RSFSolver.m: Spring Slider with rate and state friction solver Matlab version. 
 SolverComparison2_IMvsRK4_SpringSlider.m: Identical simulator with RK4 solution for comparison
 SolverComparison3_IMvsMatlabODE_SpringSlider: Identical simulator with Matlab ODE Solver for comparison
