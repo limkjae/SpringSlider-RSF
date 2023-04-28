@@ -1,39 +1,54 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Spring Slider with rate and state friction solver Matlab version.\
+%%% Written by Kyungjae (KJ) Im
+%%% For details - 
+%%% Im, K., Elsworth, D., Marone, C., & Leeman, J. (2017). The impact of 
+%%% frictional healing on stick-slip recurrence interval and stress drop: 
+%%% Implications for earthquake scaling. Journal of Geophysical Research: 
+%%% Solid Earth. https://doi.org/10.1002/2017JB014476 
+%%% (Section 3. Numerical method of Stick-slip simulation)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 clear all
 
 clf
 
 % Input Parameters
-a=0.005;
-b=0.01;
+a=0.003;
+b=0.008;
 Dc=1e-6; % [m]
-Vl=1e-4; % Loading Rate [m/s]
-Vini=1e-5; % Initial Velocity [m/s]
+Vl=3e-5; % Loading Rate [m/s]
+Vini=3e-7; % Initial Velocity [m/s]
 ThetaI=Dc/Vini; % Initial State - set Start from steady state
-NormalStress=1e6; % 2Mpa
-V0=1e-9; % Reference velocity [m/s]
-Mass=1000; % per unit area [kg/m^2] (for example, 3000=30kg on 0.1 m by 0.1 m]
-K=1e9;%0.8*Kc_QS; % Set stiffness 0.8 of critical stiffness
-Friction0=0.6; % reference friction
+NormalStress=40e6; % 2Mpa
+V0=3e-6; % Reference velocity [m/s]
+Mass=2000; % per unit area [kg/m^2] (for example, 3000=30kg on 0.1 m by 0.1 m]
+K=90.5e9;%0.8*Kc_QS; % Set stiffness 0.8 of critical stiffness
+Friction0=0.7; % reference friction
 
 FrictionI=Friction0+a*log(Vini/V0)+b*log(ThetaI*V0/Dc); % Initial friction
 Xl_Ini=FrictionI*NormalStress/K; % initial load point
 
 
 % Time Step Control KJ
-Dt=1e-4; % Time step [second]
-TotalTime=2; % Total time [second]
+Dt = 1e-05 ; % Time step [second]
+if Dt>sqrt(Mass/K)/10
+    fprintf("!!! Warning!!!!!!!!!!!! The time step may be too large. \n!!! We recommend Dt < sqrt(Mass/K)/10 \n")
+    fprintf("!!! Consider Dt < %s \n", sqrt(Mass/K)/10)
+end
+TotalTime=10; % Total time [second]
 TotalStep=round(TotalTime/Dt); % Total steps
 
 
 % Convergence control KJ Method
-V_eps=1e-7 % Convergence criterion in NR
+V_eps=1e-7; % Convergence criterion in NR
 % DV=1e-15   % Denominator of NR - this will be changed with tested Velocity
 Theta_eps=1e-6; % Convergence criterion for Theta update (implicit only)
 DelTheta=1e-5; % Denominator of NR for Theta update (implicit only)
 
 
 %%%%%%%%%%%%%%%%%%% KJ's Method %%%%%%%%%%%%%%%%%%%%%
-tic
+% tic
 % Simulation begins
 XlOld=Xl_Ini;
 Omega=sqrt(K/Mass);
@@ -113,6 +128,9 @@ for i=1:TotalStep
         VHistory(Step)=V; % velocity
         DispHistory(Step)=Disp; % Dispolacement
         ThetaHistory(Step)=Theta; % State variable
+        ShearStressHistory(Step)=Friction*NormalStress;
+        FrictionHistory(Step)=Friction;
+        
         Time(Step)=i*Dt; % Time
     end
     
@@ -122,8 +140,13 @@ for i=1:TotalStep
     XlOld=Xl;
 end
 
-fprintf("KJ's solver ")
-toc
+% fprintf("KJ's solver ")
+
+% toc
+% 
+% if Dt>sqrt(Mass/K)/10
+%     fprintf("!!! Consider Dt < %s \n", sqrt(Mass/K)/10)
+% end
 
 % Plots
 figure(1)
@@ -136,6 +159,19 @@ plot(Time,VHistory, 'k', 'LineWidth',2)
 set(gca, 'YScale', 'log')
 box on
 drawnow
+
+% 
+% % Plots
+% figure(2)
+% hold on
+% set(gcf, 'color', 'w')
+% set(gca,'fontsize', 13)
+% % ylabel('Velocity')
+% xlabel('Time (s)')
+% plot(Time,ShearStressHistory, 'k', 'LineWidth',2)
+% % set(gca, 'YScale', 'log')
+% box on
+% drawnow
 
 
 
